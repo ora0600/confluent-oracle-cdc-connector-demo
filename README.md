@@ -1,16 +1,20 @@
 # Confluent Platform/Apache Kafka CDC Connector for Oracle databases
 
-My test environment is a MacBook Pro with MacOs catalina.
+Change Data Capturing from Oracle Database (in this project Ora-DB Version 12.2) is the focus. We will capture all event from our order management application stored in Oracle Database in real-time into Confluent PlatformApache Kafka. From there you can do so much new stuff which incredible.
+![Demo Environment](images/demo-environment.png)
+
+My test environment is a MacBook Pro with MacOs Catalina.
 To execute the demo we need a couple of things to be installed:
-- docker have to installed. See [docu](https://docs.docker.com/docker-for-mac/install/)
+- docker. See [docu](https://docs.docker.com/docker-for-mac/install/)
 - jq 
-- JDK 8 or 11 installed
+- JDK 8 or 11
 - Confluent Platform 6.1 [Download from here](https://www.confluent.io/download/#confluent-platform)
 - Confluent cli tool, see [installation hints](https://docs.confluent.io/confluent-cli/current/installing.html)
 - Confluent Hub client, see [installation hints](https://docs.confluent.io/home/connect/confluent-hub/client.html)
-- get Oracle Docker image (installation hints later)
+- get Oracle Db 12.2 Docker image (installation hints later)
 
-more Tools to install. I did use both, but one would be enough for the Demo:
+more Tools to install. 
+I did use both Oracle Tools, but one would be enough for the Demo:
 - Oracle SQL*Plus as instant client (installation hints later)
 - Oracle SQLDeveloper (installation hints later)
 
@@ -18,7 +22,7 @@ more Tools to install. I did use both, but one would be enough for the Demo:
 Choose a working directory on your mac and clone this repositoy `git clone https://github.com/ora0600/confluent-oracle-cdc-connector-demo.git`
 
 ## Get Oracle Database 12.2.0.1.0 up and running
-We are working with an Oracle Docker Image. We use Oracle's docker hub image.
+We are working with an Oracle Docker Image. We use Oracle's docker hub image for a 12.2 database.
 ```bash
 # login to docker hub
 docker login
@@ -32,7 +36,7 @@ docker ps
 ```
 Now, check a little bit the database. We have one CDB and one PDB.
 ```bash
-# log-in to container, later we talk directly with Oracle DB
+# log-in to container, later we talk directly with Oracle DB via the Port 55001, this trail is only to check how DB is setup
 docker exec -it oradb121 bash 
 cat /home/oracle/.bashrc
 source /home/oracle/.bashrc
@@ -53,22 +57,23 @@ exit
 ```
 
 ### Setup tnsnames.ora
-The TNS should already there. Please check if we have the correct Ports:
+We are back on our Mac. And here you should configure TNSNAMES as well. This is necessary to talk to the Oracle Database.
+The TNS should already there (from the git clone). Please check if we have the correct Ports:
 ```bash
 cat tnsnames.ora
 ORCLCDB =   (DESCRIPTION =     (ADDRESS = (PROTOCOL = TCP)(HOST = 0.0.0.0)(PORT = 55001))     (CONNECT_DATA =       (SERVER = DEDICATED)       (SERVICE_NAME = ORCLCDB.localdomain)     )   )
 ORCLPDB1 =   (DESCRIPTION =     (ADDRESS = (PROTOCOL = TCP)(HOST = 0.0.0.0)(PORT = 55001))     (CONNECT_DATA =       (SERVER = DEDICATED)       (SERVICE_NAME = ORCLPDB1.localdomain)     )   )
-
+# ALSO check what's in sqlnet.ora, we do both connection types ezconnect and tnsnames later
 cat sqlnet.ora
 NAMES.DIRECTORY_PATH=(ezconnect, tnsnames)
 ```
-Now, we have to organize that our Oracle Net will be find. So, please set the environment variable.
+Now, we have to organize that our Oracle Net will be find tnsnames.ora. So, please set the environment variable to enable finding our `tnsnames.ora`.
 ```bash
 export TNS_ADMIN=<your PATH>/confluent-oracle-cdc-connector-demo
 ```
 
 ### Install SQL*Plus instant client
-Install sqlplus 12.2 from [here](https://www.oracle.com/database/technologies/instant-client/macos-intel-x86-downloads.html)
+Install Sql*Plus 12.2 instant client from [here](https://www.oracle.com/database/technologies/instant-client/macos-intel-x86-downloads.html)
 download 12.2 basic package and download sqlplus package 12.2
 Then prepare your system
 ```bash
@@ -84,7 +89,7 @@ export PATH=$PATH:/usr/local/Cellar/instantclient-sqlplus/19.8.0.0.0dbru/bin/
 ### Configure the database with SQL*Plus
 Please follow the steps to configure DB for our Demo:
 ```bash
-# open sqlplus
+# open sqlplus as Super-Admin sysdba, we connect via tnsnames.ora
 sqlplus sys/Oradoc_db1@ORCLCDB as sysdba
 sql> exit
 # try ezconnect 
@@ -100,10 +105,10 @@ sql> select sys_context('USERENV','CON_NAME') CON_NAME,
             sys_context('USERENV','CON_ID') CON_ID,
             sys_context('USERENV','DB_NAME') DB_NAME from DUAL;
 sql> exit
-# Now prepare DB and install a sample data model
+# Now prepare DB and install a sample data model into the ordermgtm user
 sqlplus sys/Oradoc_db1@ORCLPDB1 as sysdba
 sql> @scripts/01_create_user.sql
-sql> connect kafka/kafka@ORCLPDB1
+sql> connect ordermgmt/kafka@ORCLPDB1
 sql> @scripts/02_create_schema_datamodel.sql
 sql> @scripts/04_load_data.sql
 sql> select * from cat;
@@ -122,37 +127,48 @@ sql> SHUTDOWN IMMEDIATE;
 SQL> STARTUP MOUNT;
 SQL> ALTER DATABASE ARCHIVELOG;
 SQL> ALTER DATABASE OPEN;
+# Set logging all columns if a row is updated in CDB is optional
 sql> ALTER SESSION SET CONTAINER=cdb$root;
 sql> ALTER DATABASE ADD SUPPLEMENTAL LOG DATA (ALL) COLUMNS;
+# Set logging all columns if a row is updated in PDB is a must
 sql> ALTER SESSION SET CONTAINER=orclpdb1;
 sql> ALTER DATABASE ADD SUPPLEMENTAL LOG DATA (ALL) COLUMNS;
+# check if Flashback is enabled
+sql> SELECT FLASHBACK_ON FROM V$DATABASE; 
 sql> exit;
 exit;
+```
+Database is now prepared. Data is loaded and DB is configured to be able to work with the Confluent Oracle CDC Connector.
 
 ### Install Oracle SQLDeveloper
 Install SQLDeveloper from [here](https://www.oracle.com/tools/downloads/sqldev-downloads.html)
 SQL_Developer have to know our tnsnames.ora setup, please configure
  * set preferences->database->advanced->tnsnames directory to <your-path>/confluent-oracle-cdc-connector-demo
+![tnsnames.ora path config in SQL Developer](images/sqldeveloper-tnsnames-path.png)
 
-toDo ADD Picture:
-
-Add all Connections, so it easier to play around the different users: (TODO add pictures)
-* sqldev-cdb-sysdba.png
-* sqldev-cdb-myuser.png
-* sqldev-pdb1-sysdba.png
-* sqldev-pdb1-kafka.png
-* sqldev-pdb1-myuser.png
-SQLDeveloper
+I added all Connections, so it easier for you to play around with the different users
+Setup SQLDeveloper Connection to connect CDB as sysdba
+![Setup SQLDeveloper Connection to connect CDB as sysdba](images/sqldev-cdb-sysdba.png)
+Setup SQLDeveloper Connection to connect CDB as C##myuser or we call it C##CDCCONNECT
+![Setup SQLDeveloper Connection to connect CDB as C##myuser](images/sqldev-cdb-myuser.png)
+Setup SQLDeveloper Connection to connect PDB as sysdba
+![Setup SQLDeveloper Connection to connect PDB as sysdba](images/sqldev-pdb1-sysdba.png)
+Setup SQLDeveloper Connection to connect PDB as kafka or we use ordermgmt in our demo:
+![Setup SQLDeveloper Connection to connect PDB as kafka](images/sqldev-pdb1-kafka.png)
+Setup SQLDeveloper Connection to connect PDB as C##myuser or we call it C##CDCCONNECT:
+![Setup SQLDeveloper Connection to connect PDB as C##myuser](images/sqldev-pdb1-myuser.png)
 
 ## Install the Confluent Hub Client
-Install the hub client by following these [instructions](https://docs.confluent.io/home/connect/confluent-hub/client.html)
+Install the hub client by following these [instructions](https://docs.confluent.io/home/connect/confluent-hub/client.html).
+The Confluent HUB Client is using to install connectors very easily.
 ```bash
 brew tap confluentinc/homebrew-confluent-hub-client
 brew install --cask confluent-hub-client
 # check if hubclient can be executed
 confluent-hub
 ```
-## Install the CDC Connector for Oracle
+
+## Install the Confluent CDC Connector for Oracle
 Please be aware that Confluent Platform is already installed.
 How to install the connector, please follow [this](https://www.confluent.io/hub/confluentinc/kafka-connect-oracle-cdc).
 ```bash
@@ -256,7 +272,7 @@ sql> exit;
 # add SCN into config3.json under start.from
 vi config3.json
 "start.from": "new SCN"
-# sqve cong3.json
+# save config3.json
 
 # start conector 
 curl -s -X POST -H 'Content-Type: application/json' --data @config3.json http://localhost:8083/connectors | jq
@@ -300,13 +316,13 @@ SQL> insert into kafka.NOTES(NOTE_ID,NOTE) values (11,'This is really a very lon
 sql> commit;
 sql> exit;
 ```
-Check C3 what was happening.
+Check in C3 what was happening after our INSERT Statement.
 * the insert is documented into redo-log-topic-4
-* a new topic NOTES.NOTE_topic was created
+* a new topic NOTES.NOTE_topic was created for LOB Column
    * Here the lob column is stored
       * Key: { "table": "ORCLPDB1.KAFKA.NOTES", "column": "NOTE", "primary_key": "\u000b" }
       * Value: This is really a very long note. And we have to organize that is stored as CLOB in the database, and we see what is happening in Kafka ...
-* a new Topic ORCLPDB1.KAFKA.NOTES was created
+* a new Topic ORCLPDB1.KAFKA.NOTES was created where all changes are documented
    * Here the columns are stored without NOTE CLOB column 
 ```bash
 # stop confluent and destroy

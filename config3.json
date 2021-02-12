@@ -14,7 +14,7 @@
     "oracle.port": 55001,
     "oracle.sid":"ORCLCDB",
     "oracle.pdb.name":"ORCLPDB1",
-    "oracle.username": "C##MYUSER",
+    "oracle.username": "C##CDCCONNECT",
     "oracle.password": "confluent",
     "start.from":"2889690",
     "redo.log.topic.name": "redo-log-topic-3",

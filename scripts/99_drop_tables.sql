@@ -1,15 +1,15 @@
 --------------------------------------------------------------------------------------
 -- Name	       : Sample Database
 --------------------------------------------------------------------------------------
-DROP TABLE kafka.order_items;  
-DROP TABLE kafka.orders;
-DROP TABLE kafka.inventories;
-DROP TABLE kafka.products;
-DROP TABLE kafka.product_categories;
-DROP TABLE kafka.warehouses;
-DROP TABLE kafka.employees;
-DROP TABLE kafka.contacts;
-DROP TABLE kafka.customers;
-DROP TABLE kafka.locations;
-DROP TABLE kafka.countries;
-DROP TABLE kafka.regions;
+DROP TABLE ordermgmt.order_items;  
+DROP TABLE ordermgmt.orders;
+DROP TABLE ordermgmt.inventories;
+DROP TABLE ordermgmt.products;
+DROP TABLE ordermgmt.product_categories;
+DROP TABLE ordermgmt.warehouses;
+DROP TABLE ordermgmt.employees;
+DROP TABLE ordermgmt.contacts;
+DROP TABLE ordermgmt.customers;
+DROP TABLE ordermgmt.locations;
+DROP TABLE ordermgmt.countries;
+DROP TABLE ordermgmt.regions;

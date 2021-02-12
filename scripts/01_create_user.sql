@@ -6,11 +6,11 @@
 --------------------------------------------------------------------
 
 -- create new user
-Create user kafka identified by kafka;
+Create user ordermgmt identified by kafka;
 
 -- grant priviledges
-grant RESOURCE to kafka;
-grant create session to kafka;
+grant RESOURCE to ordermgmt;
+grant create session to ordermgmt;
 
 -- give right to write data to tablespace
-alter user kafka quota 50m on USERS;
+alter user ordermgmt quota 50m on USERS;
