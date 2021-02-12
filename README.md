@@ -198,8 +198,8 @@ curl -X DELETE http://localhost:8083/connectors/SimpleOracleCDC_1
 confluent local services connect connector unload SimpleOracleCDC_1
 
 # add new customer into database
-sqlplus kafka/kafka@ORCLPDB1
-SQL> insert into kafka.CUSTOMERS (CUSTOMER_ID,NAME,ADDRESS,CREDIT_LIMIT,WEBSITE) values (501,'Confluent1','Mountain View',5000,'http://www.confluent.io');
+sqlplus ordermgmt/kafka@ORCLPDB1
+SQL> insert into ordermgmt.CUSTOMERS (CUSTOMER_ID,NAME,ADDRESS,CREDIT_LIMIT,WEBSITE) values (501,'Confluent1','Mountain View',5000,'http://www.confluent.io');
 sql> commit;
 sql> exit;
 ## The connector produces records whenever DML events (INSERT, UPDATE, AND DELETE) occur for captured tables.
@@ -238,8 +238,8 @@ curl -s -X POST -H 'Content-Type: application/json' --data @config2.json http://
 curl -s -X GET -H 'Content-Type: application/json' http://localhost:8083/connectors/SimpleOracleCDC_2/status | jq
 confluent local services connect connector status SimpleOracleCDC_2
 # add new customer
-sqlplus kafka/kafka@ORCLPDB1
-SQL> insert into kafka.CUSTOMERS (CUSTOMER_ID,NAME,ADDRESS,CREDIT_LIMIT,WEBSITE) values (502,'Confluent2','Mountain View',5000,'http://www.confluent.io');
+sqlplus ordermgmt/kafka@ORCLPDB1
+SQL> insert into ordermgmt.CUSTOMERS (CUSTOMER_ID,NAME,ADDRESS,CREDIT_LIMIT,WEBSITE) values (502,'Confluent2','Mountain View',5000,'http://www.confluent.io');
 sql> commit;
 sql> exit;
 # check redo log topic
@@ -247,7 +247,7 @@ kafka-avro-console-consumer --topic redo-log-topic-2 \
 --partition 0 --offset earliest --bootstrap-server localhost:9092 \
 --property schema.registry.url=http://localhost:8081
 # check table topics
-kafka-avro-console-consumer --topic ORCLPDB1.KAFKA.CUSTOMERS \
+kafka-avro-console-consumer --topic ORCLPDB1.ORDERMGMT.CUSTOMERS \
 --partition 0 --offset earliest --bootstrap-server localhost:9092 \
 --property schema.registry.url=http://localhost:8081
 # do uopdate and delete and stuff like that
@@ -279,9 +279,9 @@ curl -s -X POST -H 'Content-Type: application/json' --data @config3.json http://
 # status
 curl -s -X GET -H 'Content-Type: application/json' http://localhost:8083/connectors/SimpleOracleCDC_3/status | jq
 # add new customer
-sqlplus kafka/kafka@ORCLPDB1
-SQL> insert into kafka.CUSTOMERS (CUSTOMER_ID,NAME,ADDRESS,CREDIT_LIMIT,WEBSITE) values (503,'Confluent3','Mountain View',5000,'http://www.confluent.io');
-sql> insert into kafka.CUSTOMERS (CUSTOMER_ID,NAME,ADDRESS,CREDIT_LIMIT,WEBSITE) values (504,'Confluent4','Mountain View',5000,'http://www.confluent.io');
+sqlplus ordermgmt/kafka@ORCLPDB1
+SQL> insert into ordermgmt.CUSTOMERS (CUSTOMER_ID,NAME,ADDRESS,CREDIT_LIMIT,WEBSITE) values (503,'Confluent3','Mountain View',5000,'http://www.confluent.io');
+sql> insert into ordermgmt.CUSTOMERS (CUSTOMER_ID,NAME,ADDRESS,CREDIT_LIMIT,WEBSITE) values (504,'Confluent4','Mountain View',5000,'http://www.confluent.io');
 sql> commit;
 sql> exit;
 # check redo log topic
@@ -289,7 +289,7 @@ kafka-avro-console-consumer --topic redo-log-topic-3 \
 --partition 0 --offset earliest --bootstrap-server localhost:9092 \
 --property schema.registry.url=http://localhost:8081
 # check table topics
-kafka-avro-console-consumer --topic ORCLPDB1.KAFKA.CUSTOMERS \
+kafka-avro-console-consumer --topic ORCLPDB1.ORDERMGMT.CUSTOMERS \
 --partition 0 --offset earliest --bootstrap-server localhost:9092 \
 --property schema.registry.url=http://localhost:8081
 
@@ -311,8 +311,8 @@ curl -s -X POST -H 'Content-Type: application/json' --data @config4.json http://
 # check status
 curl -s -X GET -H 'Content-Type: application/json' http://localhost:8083/connectors/SimpleOracleCDC_4/status | jq
 # add new note
-sqlplus kafka/kafka@ORCLPDB1
-SQL> insert into kafka.NOTES(NOTE_ID,NOTE) values (11,'This is really a very long note. And we have to organize that is stored as CLOB in the database, and we see what is happening in Kafka with this column');
+sqlplus ordermgmt/kafka@ORCLPDB1
+SQL> insert into ordermgmt.NOTES(NOTE_ID,NOTE) values (11,'This is really a very long note. And we have to organize that is stored as CLOB in the database, and we see what is happening in Kafka with this column');
 sql> commit;
 sql> exit;
 ```
@@ -320,9 +320,9 @@ Check in C3 what was happening after our INSERT Statement.
 * the insert is documented into redo-log-topic-4
 * a new topic NOTES.NOTE_topic was created for LOB Column
    * Here the lob column is stored
-      * Key: { "table": "ORCLPDB1.KAFKA.NOTES", "column": "NOTE", "primary_key": "\u000b" }
+      * Key: { "table": "ORCLPDB1.ORDERMGMT.NOTES", "column": "NOTE", "primary_key": "\u000b" }
       * Value: This is really a very long note. And we have to organize that is stored as CLOB in the database, and we see what is happening in Kafka ...
-* a new Topic ORCLPDB1.KAFKA.NOTES was created where all changes are documented
+* a new Topic ORCLPDB1.ORDERMGMT.NOTES was created where all changes are documented
    * Here the columns are stored without NOTE CLOB column 
 ```bash
 # stop confluent and destroy
