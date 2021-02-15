@@ -27,10 +27,10 @@ We are working with an Oracle Docker Image. We use Oracle's docker hub image for
 # login to docker hub
 docker login
 # if you run this command the first time, you will download the image
-docker run -d -it --name oradb121 -P store/oracle/database-enterprise:12.2.0.1
+docker run -d -it --name oradb122 -P store/oracle/database-enterprise:12.2.0.1
 # the -P enabled a public port
 # Please check the Port, in my case it was 55001, if it different please change the following setup from 55001 to the new value.
-docker port oradb121
+docker port oradb122
 # Check container running
 docker ps
 ```
@@ -84,7 +84,10 @@ mv ~/Downloads/instantclient-basic-macos.x64-12.2.0.1.0-2.zip /usr/local/Homebre
 mv ~/Downloads/instantclient-sqlplus-macos.x64-12.2.0.1.0-2.zip /usr/local/Homebrew/Library/Taps/instantclienttap/homebrew-instantclient/
 brew install instantclient-basic
 brew install instantclient-sqlplus
-export PATH=$PATH:/usr/local/Cellar/instantclient-sqlplus/19.8.0.0.0dbru/bin/
+# check path, if you are able to find sqlplus (in my case it is in /usr/local/bin/sqlplus)
+echo $PATH
+# and maybe change
+export PATH=$PATH:...
 ```
 ### Configure the database with SQL*Plus
 Please follow the steps to configure DB for our Demo:
@@ -132,9 +135,7 @@ sql> ALTER SESSION SET CONTAINER=cdb$root;
 sql> ALTER DATABASE ADD SUPPLEMENTAL LOG DATA (ALL) COLUMNS;
 # Set logging all columns if a row is updated in PDB is a must
 sql> ALTER SESSION SET CONTAINER=orclpdb1;
-sql> ALTER DATABASE ADD SUPPLEMENTAL LOG DATA (ALL) COLUMNS;
-# check if Flashback is enabled
-sql> SELECT FLASHBACK_ON FROM V$DATABASE; 
+sql> ALTER DATABASE ADD SUPPLEMENTAL LOG DATA (ALL) COLUMNS; 
 sql> exit;
 exit;
 ```
@@ -186,6 +187,7 @@ answered with "y"
 # Start local Confluent Platform 6.1
 confluent local services start
 # scenario redo logs only: Capturing Redo logs only
+######change config1.json if you want: Oracle SID, Ports etc. if your setup is different
 # Start connector
 curl -s -X POST -H 'Content-Type: application/json' --data @config1.json http://localhost:8083/connectors | jq
 # or
@@ -232,6 +234,7 @@ kafka-topics --create --topic redo-log-topic-2 \
 --bootstrap-server localhost:9092 --replication-factor 1 \
 --partitions 1 --config cleanup.policy=delete \
 --config retention.ms=120960000
+######change config2.json if you want: Oracle SID, Ports etc. if your setup is different
 # start connector
 curl -s -X POST -H 'Content-Type: application/json' --data @config2.json http://localhost:8083/connectors | jq
 #get status
@@ -269,6 +272,7 @@ kafka-topics --create --topic redo-log-topic-3 \
 sqlplus sys/Oradoc_db1@ORCLPDB1 as sysdba
 SQL> SELECT CURRENT_SCN FROM v$database;
 sql> exit;
+###### change config3.json if you want: Oracle SID, Ports etc. if your setup is different
 # add SCN into config3.json under start.from
 vi config3.json
 "start.from": "new SCN"
@@ -305,7 +309,7 @@ kafka-topics --create --topic redo-log-topic-4 \
 --bootstrap-server localhost:9092 --replication-factor 1 \
 --partitions 1 --config cleanup.policy=delete \
 --config retention.ms=120960000
-
+######change config4.json if you want: Oracle SID, Ports etc. if your setup is different
 # start connector
 curl -s -X POST -H 'Content-Type: application/json' --data @config4.json http://localhost:8083/connectors | jq
 # check status
@@ -333,8 +337,8 @@ confluent local destroy
 # finally stop the DB container
 ```bash
 # stop
-docker stop oradb121
-docker rm oradb121
+docker stop oradb122
+docker rm oradb122
 ```
 
 # License
