@@ -1,6 +1,6 @@
 # Confluent Platform/Apache Kafka CDC Connector for Oracle databases
 
-Change Data Capturing from Oracle Database (in this project Ora-DB Version 12.2) is the focus. We will capture all event from our order management application stored in Oracle Database in real-time into Confluent PlatformApache Kafka. From there you can do so much new stuff which incredible.
+Change Data Capturing from Oracle Database (in this project Ora-DB Version 12.2) is the focus. We will capture all events from our order management application stored in Oracle Database in real-time into Confluent Platform/Apache Kafka. From there you can do so much new stuff which is incredible like move data into new cloud dbs, process in real-time...
 ![Demo Environment](images/demo-environment.png)
 
 My test environment is a MacBook Pro with MacOs Catalina.
