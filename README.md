@@ -11,7 +11,7 @@ To execute the demo we need a couple of things to be installed:
 - Confluent Platform 6.1 [Download from here](https://www.confluent.io/download/#confluent-platform)
 - Confluent cli tool, see [installation hints](https://docs.confluent.io/confluent-cli/current/installing.html)
 - Confluent Hub client, see [installation hints](https://docs.confluent.io/home/connect/confluent-hub/client.html)
-- get Oracle Db 12.2 Docker image (installation hints later)
+- get Oracle DB 12.2 Docker image (installation hints later)
 
 more Tools to install. 
 I did use both Oracle Tools, but one would be enough for the Demo:
@@ -37,7 +37,7 @@ docker ps
 Now, check a little bit the database. We have one CDB and one PDB.
 ```bash
 # log-in to container, later we talk directly with Oracle DB via the Port 55001, this trail is only to check how DB is setup
-docker exec -it oradb121 bash 
+docker exec -it oradb122 bash 
 cat /home/oracle/.bashrc
 source /home/oracle/.bashrc
 cd /u01/app/oracle/product/12.2.0/dbhome_1/admin/ORCLCDB
@@ -73,7 +73,7 @@ export TNS_ADMIN=<your PATH>/confluent-oracle-cdc-connector-demo
 ```
 
 ### Install SQL*Plus instant client
-Install Sql*Plus 12.2 instant client from [here](https://www.oracle.com/database/technologies/instant-client/macos-intel-x86-downloads.html)
+Install SQL*Plus 12.2 instant client from [here](https://www.oracle.com/database/technologies/instant-client/macos-intel-x86-downloads.html)
 download 12.2 basic package and download sqlplus package 12.2
 Then prepare your system
 ```bash
@@ -114,7 +114,11 @@ sql> @scripts/01_create_user.sql
 sql> connect ordermgmt/kafka@ORCLPDB1
 sql> @scripts/02_create_schema_datamodel.sql
 sql> @scripts/04_load_data.sql
-sql> select * from cat;
+sql> select table_name from cat;
+sql> 
+# Try test generator
+sql> @scripts/06_test_data_generator.sql
+sql> exec clone( 'CUSTOMERS', 10000 );
 sql> exit
 # Register Oracle CDC privs in DB
 sqlplus sys/Oradoc_db1@ORCLCDB as sysdba
@@ -123,7 +127,7 @@ sql> @05_cdc_privs.sql
 sql> ARCHIVE LOG LIST; 
 # if archive mode is "no archive mode" switch it on
 sql> exit;
-docker exec -it oradb121 bash 
+docker exec -it oradb122 bash 
 source /home/oracle/.bashrc
 sqlplus sys/Oradoc_db1 as sysdba
 sql> SHUTDOWN IMMEDIATE;
@@ -244,6 +248,11 @@ confluent local services connect connector status SimpleOracleCDC_2
 sqlplus ordermgmt/kafka@ORCLPDB1
 SQL> insert into ordermgmt.CUSTOMERS (CUSTOMER_ID,NAME,ADDRESS,CREDIT_LIMIT,WEBSITE) values (502,'Confluent2','Mountain View',5000,'http://www.confluent.io');
 sql> commit;
+# You can also generate what ever you want (only tables without contraints)
+sql> exec clone( 'CUSTOMERS', 100 );
+sql> exec clone( 'PRODUCT_CATEGORIES', 100 );
+sql> exec clone( 'REGIONS', 100 );
+sql> exec clone( 'NOTES', 100 );
 sql> exit;
 # check redo log topic
 kafka-avro-console-consumer --topic redo-log-topic-2 \
