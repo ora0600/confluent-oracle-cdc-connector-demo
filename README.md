@@ -22,7 +22,7 @@ I did use both Oracle Tools, but one would be enough for the Demo:
 Choose a working directory on your mac and clone this repositoy `git clone https://github.com/ora0600/confluent-oracle-cdc-connector-demo.git`
 
 ## Get Oracle Database 12.2.0.1.0 up and running
-We are working with an Oracle Docker Image. We use Oracle's docker hub image for a 12.2 database.
+We are working with an Oracle Docker Image. We use Oracle's docker hub image for a 12.2 database. To get access to that image please [follow answer on stackoverflow](https://stackoverflow.com/questions/47887403/pull-access-denied-for-container-registry-oracle-com-database-enterprise)
 ```bash
 # login to docker hub
 docker login
