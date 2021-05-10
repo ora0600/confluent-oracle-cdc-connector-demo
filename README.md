@@ -101,8 +101,7 @@ sql> CONNECT sys/Oradoc_db1@localhost:55001/ORCLCDB.localdomain as sysdba
 # connect as sysdba and see what's there
 sql> connect sys/Oradoc_db1@ORCLCDB as sysdba
 sql> select dbid, con_id, name from v$pdbs;
-sql> select dbid, con_id, name from v$pdbs;
-sql> alter session set container = CDB$ROOT;
+sql> alter session set container = ORCLPDB1;
 sql> select dbid, con_id, name from v$pdbs;
 sql> select sys_context('USERENV','CON_NAME') CON_NAME,
             sys_context('USERENV','CON_ID') CON_ID,
