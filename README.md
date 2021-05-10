@@ -121,7 +121,7 @@ sql> exec clone( 'CUSTOMERS', 10000 );
 sql> exit
 # Register Oracle CDC privs in DB
 sqlplus sys/Oradoc_db1@ORCLCDB as sysdba
-sql> @05_cdc_privs.sql
+sql> @scripts/05_cdc_privs.sql
 # check if archiv log is on (it's not)
 sql> ARCHIVE LOG LIST; 
 # if archive mode is "no archive mode" switch it on
