@@ -133,6 +133,8 @@ sql> SHUTDOWN IMMEDIATE;
 SQL> STARTUP MOUNT;
 SQL> ALTER DATABASE ARCHIVELOG;
 SQL> ALTER DATABASE OPEN;
+# Now, archive log is activated
+SQL> ARCHIVE LOG LIST; 
 # Set logging all columns if a row is updated in CDB is optional
 sql> ALTER SESSION SET CONTAINER=cdb$root;
 sql> ALTER DATABASE ADD SUPPLEMENTAL LOG DATA (ALL) COLUMNS;
