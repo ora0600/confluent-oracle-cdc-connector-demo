@@ -177,7 +177,7 @@ confluent-hub
 Please be aware that Confluent Platform is already installed.
 How to install the connector, please follow [this](https://www.confluent.io/hub/confluentinc/kafka-connect-oracle-cdc).
 ```bash
-confluent-hub install confluentinc/kafka-connect-oracle-cdc:1.0.3
+confluent-hub install confluentinc/kafka-connect-oracle-cdc:1.1.0
 # I answered the following way
 choosed 1
 answered with "n" choosed in my case $CONFLUENT_HOME/share/java
